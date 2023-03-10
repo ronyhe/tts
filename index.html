@@ -19,7 +19,7 @@
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
         pdfjsLib.GlobalWorkerOptions.workerSrc = '//mozilla.github.io/pdf.js/build/pdf.worker.js';
         let doc = null;
-        let text = ''
+        let utts = []
 
         const openFile = (f) => new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -47,6 +47,14 @@
                 alert('Page number is out of range');
                 return;
             }
+            const text = await getText(doc, p);
+            utts.forEach(u => speechSynthesis.cancel(u));
+            utts = text.split('.').map((s) => {
+                const u = new SpeechSynthesisUtterance(s);
+                u.lang = 'he-il';
+                speechSynthesis.speak(u);
+                return u;
+            })
             document.getElementById('content').innerText = await getText(doc, p);
         }
 
@@ -54,12 +62,6 @@
             const f = await openFile(file);
             doc = await pdfjsLib.getDocument(f).promise;
             await setTextFromPage()
-            // const text = await textFromDoc(pdf);
-            // text.split('.').forEach((s, i) => {
-            //     const u = new SpeechSynthesisUtterance(s);
-            //     u.lang = 'he-il';
-            //     speechSynthesis.speak(u);
-            // })
         };
 
         document.getElementById('upload').addEventListener('change', () => {
