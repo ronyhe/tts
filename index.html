@@ -7,16 +7,19 @@
 </head>
 <body>
     <input type="file" id="file" name="Pdf file" accept="application/pdf" />
+    <label for="page">Page</label><input type="number" id="page" name="Page" value="1" min="1" max="999"/>
     <button id="upload">Go</button>
     <br />
     <button id="play">Play</button>
     <button id="pause">Pause</button>
     <br />
-    <div id="content"></div>
+    <div id="content" style="text-align: right"></div>
 
     <script type="application/javascript">
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
         pdfjsLib.GlobalWorkerOptions.workerSrc = '//mozilla.github.io/pdf.js/build/pdf.worker.js';
+        let doc = null;
+        let text = ''
 
         const openFile = (f) => new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -37,17 +40,36 @@
             return content.join(' ');
         }
 
+        const setTextFromPage = async () => {
+            const page = document.getElementById('page').value;
+            const p = parseInt(page, 10);
+            if (p < 1 || p > doc.numPages || isNaN(p)) {
+                alert('Page number is out of range');
+                return;
+            }
+            document.getElementById('content').innerText = await getText(doc, p);
+        }
+
         const process = async (file) => {
             const f = await openFile(file);
-            const pdf = await pdfjsLib.getDocument(f).promise;
-            const text = await textFromDoc(pdf);
-            text.split('.').forEach((s, i) => {
-                const u = new SpeechSynthesisUtterance(s);
-                u.lang = 'he-il';
-                speechSynthesis.speak(u);
-            })
+            doc = await pdfjsLib.getDocument(f).promise;
+            await setTextFromPage()
+            // const text = await textFromDoc(pdf);
+            // text.split('.').forEach((s, i) => {
+            //     const u = new SpeechSynthesisUtterance(s);
+            //     u.lang = 'he-il';
+            //     speechSynthesis.speak(u);
+            // })
         };
 
+        document.getElementById('upload').addEventListener('change', () => {
+            const file = document.getElementById('file').files[0];
+            if (!file) {
+                alert('Please select a file to upload first.');
+                return;
+            }
+            process(file)
+        })
         document.getElementById('upload').addEventListener('click', function () {
             const file = document.getElementById('file').files[0];
             if (!file) {
