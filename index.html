@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sapir School</title>
+    <script src="//mozilla.github.io/pdf.js/build/pdf.js"></script>
+</head>
+<body>
+    <input type="file" id="file" name="Pdf file" accept="application/pdf" />
+    <button id="upload">Go</button>
+
+    <script type="application/javascript">
+        var pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '//mozilla.github.io/pdf.js/build/pdf.worker.js';
+        console.log(pdfjsLib);
+        var file = document.getElementById('file');
+        var upload = document.getElementById('upload');
+
+        const openFile = (f) => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(f);
+        });
+
+        const getText = async (doc, page) => {
+            const p = await doc.getPage(page);
+            const content =  await p.getTextContent();
+            return content.items.map(i => i.str).join(' ');
+        }
+
+        const textFromDoc = async doc => {
+            const pages = doc.numPages
+            const content = await Promise.all(new Array(pages).fill(0).map((_, i) => getText(doc, i + 1)));
+            return content.join(' ');
+        }
+
+        const process = async (file) => {
+            const f = await openFile(file);
+            const pdf = await pdfjsLib.getDocument(f).promise;
+            const text = await textFromDoc(pdf);
+            const utt = new SpeechSynthesisUtterance(text);
+            utt.lang = 'he-il';
+            text.split('.').forEach((s, i) => {
+                const u = new SpeechSynthesisUtterance(s);
+                u.lang = 'he-il';
+                speechSynthesis.speak(u);
+            })
+        };
+
+        window.pause = () => speechSynthesis.pause();
+
+        upload.addEventListener('click', function () {
+            const file = document.getElementById('file').files[0];
+            if (!file) {
+                alert('Please select a file to upload first.');
+                return;
+            }
+            process(file)
+        });
+    </script>
+</body>
+</html>
