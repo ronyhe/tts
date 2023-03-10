@@ -8,13 +8,13 @@
 <body>
     <input type="file" id="file" name="Pdf file" accept="application/pdf" />
     <button id="upload">Go</button>
+    <br />
+    <button id="play">Play</button>
+    <button id="pause">Pause</button>
 
     <script type="application/javascript">
-        var pdfjsLib = window['pdfjs-dist/build/pdf'];
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
         pdfjsLib.GlobalWorkerOptions.workerSrc = '//mozilla.github.io/pdf.js/build/pdf.worker.js';
-        console.log(pdfjsLib);
-        var file = document.getElementById('file');
-        var upload = document.getElementById('upload');
 
         const openFile = (f) => new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -48,9 +48,7 @@
             })
         };
 
-        window.pause = () => speechSynthesis.pause();
-
-        upload.addEventListener('click', function () {
+        document.getElementById('upload').addEventListener('click', function () {
             const file = document.getElementById('file').files[0];
             if (!file) {
                 alert('Please select a file to upload first.');
@@ -58,6 +56,13 @@
             }
             process(file)
         });
+
+        document.getElementById('play').addEventListener('click', function () {
+            speechSynthesis.resume();
+        });
+        document.getElementById('pause').addEventListener('click', function () {
+            speechSynthesis.pause();
+        })
     </script>
 </body>
 </html>
